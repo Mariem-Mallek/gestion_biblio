@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import declarative_base , sessionmaker
+
 
 #Base ORM
 Base = declarative_base()
@@ -10,8 +11,9 @@ DATABASE_URL = "sqlite:///bibliotheque.db"
 #Le modele 
 class Livre(Base):
     __tablename__='livres'
-    id=Column(Integer,Primary_key=True,autoincrement=True)
-    titre=Column(String,nullable=False)
+
+    id=Column(Integer,primary_key=True,autoincrement=True)
+    title=Column(String,nullable=False)
     author=Column(String,nullable=False)
     year=Column(Integer)
     isbn=Column(String,unique=True,nullable=True)
