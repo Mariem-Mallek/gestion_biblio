@@ -18,3 +18,4 @@ def login(app):
         return {"token": token}
     else:
         return {"error": "Invalid credentials"}, 401
+    

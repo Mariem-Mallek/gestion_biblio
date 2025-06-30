@@ -32,43 +32,54 @@ def addLivre(app):
 
 def getAllLivres(app):
     req=app.current_request
+    require_auth(req)
+
     params=req.query_params 
     limit= int(params.get("limit", 10))
     author = params.get("author")
+
     session=SessionLocal()
+    query = session.query(Livre)
 
     if author:
-        session.query(Livre) = session.query(Livre).filter(Livre.author.ilike(f"%{author}%"))
+        query = query.filter(Livre.author.ilike(f"%{author}%"))
 
-    
-    livres=session.query(Livre).limit(limit).all()
+    livres=query.limit(limit).all()
+
     res=[{'id':l.id , 'title':l.title, 'author':l.author,'year':l.year, 'isbn':l.isbn} for l in livres]
     session.close()
     return res
 
 
+
 def getLivreById(id):
     session=SessionLocal()
-    livre=session.query(Livre).filter(Livre.id==int(id)).first()
+    try:
+        livre=session.query(Livre).filter(Livre.id==int(id)).first()
 
-    if livre:
-        res={
+        if not livre :
+            return {'Erreur' : 'Livre introuvable !'},404
+        
+        return {
             'id':livre.id,
             'title':livre.title,
             'author':livre.author,
             'year':livre.year,
             'isbn':livre.isbn
         }
-    else:
-        res={'Erreur' : 'Livre introuvable !'}
+    
+    except Exception as e:
+        return {'error': str(e)}, 400
+    
+    finally:
+        session.close()
 
-    session.close()
-    return res 
 
 
 
 def updateLivre(app,id):
     req=app.current_request
+    require_auth(req)
     data=req.json_body
     session=SessionLocal()
     livre= session.query(Livre).filter(Livre.id == int(id)).first()

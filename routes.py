@@ -10,7 +10,7 @@ def register_routes(app):
 
     @app.route('/livres/getAll',methods=['GET'])
     def route_get_livres():
-        return getAllLivres()
+        return getAllLivres(app)
 
 
     @app.route('/livres/getLivre/{id}',methods=['GET'])
@@ -29,5 +29,5 @@ def register_routes(app):
 
 
     @app.route('/login',methods=['POST'])
-    def route_login(app):
+    def route_login():
         return login(app)

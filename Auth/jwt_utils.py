@@ -1,7 +1,7 @@
 import jwt
 from chalice import UnauthorizedError
 
-SECRET_KEY = "clé_GESTION_biblio"
+SECRET_KEY = "gestion_biblio_2025_secure_key@123!XYZ"
 
 
 def require_auth(request):
