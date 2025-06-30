@@ -30,13 +30,21 @@ def addLivre(app):
 
 
 
-def getAllLivres():
+def getAllLivres(app):
+    req=app.current_request
+    params=req.query_params 
+    limit= int(params.get("limit", 10))
+    author = params.get("author")
     session=SessionLocal()
-    livres=session.query(Livre).all()
+
+    if author:
+        session.query(Livre) = session.query(Livre).filter(Livre.author.ilike(f"%{author}%"))
+
+    
+    livres=session.query(Livre).limit(limit).all()
     res=[{'id':l.id , 'title':l.title, 'author':l.author,'year':l.year, 'isbn':l.isbn} for l in livres]
     session.close()
     return res
-
 
 
 def getLivreById(id):
