@@ -5,7 +5,8 @@ SECRET_KEY = "gestion_biblio_2025_secure_key@123!XYZ"
 
 
 def require_auth(request):
-    token = request.headers.get("Authorization")
+    header = request.headers.get("Authorization")
+    token = header.split(" ")[1]
     if not token:
         raise UnauthorizedError("Token manquant")
     try:

@@ -1,14 +1,15 @@
+import os
+from dotenv import load_dotenv
 from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.orm import declarative_base , sessionmaker
 
 
-#Base ORM
 Base = declarative_base()
 
-# Base de données SQLite locale
-DATABASE_URL = "sqlite:///bibliotheque.db"
+load_dotenv()
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-#Le modele 
+
 class Livre(Base):
     __tablename__='livres'
 
@@ -18,10 +19,10 @@ class Livre(Base):
     year=Column(Integer)
     isbn=Column(String,unique=True,nullable=True)
 
-# Création de l'engine SQLite
+
 engine = create_engine(DATABASE_URL, echo=True)
 
-# Session pour exécuter des requêtes
+#Exécution des requêtes
 SessionLocal = sessionmaker(bind=engine)
 
 # Création de toutes les tables (si elles n'existent pas)

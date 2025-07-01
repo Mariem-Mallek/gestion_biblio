@@ -1,5 +1,7 @@
 from models import SessionLocal , Livre
-from Auth.jwt_utils import require_auth
+from exceptions import LivreNonTrouve , DonneesInvalides , handleException
+from Utils.jwt_utils import require_auth
+from Utils.query_utils import livre_filtres,livre_pagination
 
 
 def addLivre(app):
@@ -7,12 +9,11 @@ def addLivre(app):
     require_auth(req)
     data=req.json_body
 
-    # Validation des données
     if not data.get('title') :
-        return {'error': 'Titre est obligatoire !'}
+        raise DonneesInvalides("Le titre est obligatoire.")
     
     if not data.get('author') :
-        return {'error': 'Auteur est obligatoire !'}
+        raise DonneesInvalides("L'auteur est obligatoire.")
     
     session = SessionLocal()
     newLivre= Livre(
@@ -34,22 +35,22 @@ def getAllLivres(app):
     req=app.current_request
     require_auth(req)
 
-    params=req.query_params 
-    limit= int(params.get("limit", 10))
-    author = params.get("author")
+    params = req.query_params or {}
 
     session=SessionLocal()
     query = session.query(Livre)
 
-    if author:
-        query = query.filter(Livre.author.ilike(f"%{author}%"))
+    query=livre_filtres(query,params)
+    query=livre_pagination(query,params)
 
-    livres=query.limit(limit).all()
-
-    res=[{'id':l.id , 'title':l.title, 'author':l.author,'year':l.year, 'isbn':l.isbn} for l in livres]
+    livres=query.all()
     session.close()
-    return res
-
+    
+    return [{
+                'id': l.id,
+                'title': l.title,
+            } for l in livres]
+    
 
 
 def getLivreById(id):
@@ -58,7 +59,7 @@ def getLivreById(id):
         livre=session.query(Livre).filter(Livre.id==int(id)).first()
 
         if not livre :
-            return {'Erreur' : 'Livre introuvable !'},404
+            raise LivreNonTrouve(id)
         
         return {
             'id':livre.id,
@@ -69,7 +70,7 @@ def getLivreById(id):
         }
     
     except Exception as e:
-        return {'error': str(e)}, 400
+        return handleException(e)
     
     finally:
         session.close()
@@ -85,8 +86,8 @@ def updateLivre(app,id):
     livre= session.query(Livre).filter(Livre.id == int(id)).first()
 
     if not livre:
-        session.close()
-        return{'Erreur' : 'Livre introuvable !'}
+        raise LivreNonTrouve(livre.id)
+
     
     livre.title=data.get('title',livre.title)
     livre.author=data.get('author',livre.author)
@@ -105,8 +106,7 @@ def deleteLivre(id):
     session= SessionLocal()
     livre= session.query(Livre).filter(Livre.id == int(id)).first()
     if not livre:
-        session.close()
-        return{'Erreur' : 'Livre introuvable'}
+        raise LivreNonTrouve(livre.id)
     
     session.delete(livre)
     session.commit()

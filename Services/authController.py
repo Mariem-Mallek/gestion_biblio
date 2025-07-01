@@ -1,6 +1,6 @@
 import jwt
 import datetime
-from Auth.jwt_utils import SECRET_KEY
+from Utils.jwt_utils import SECRET_KEY
 
 def login(app):
     req = app.current_request
