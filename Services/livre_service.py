@@ -1,7 +1,8 @@
 from models import SessionLocal , Livre
-from exceptions import LivreNonTrouve , DonneesInvalides , handleException
 from Utils.jwt_utils import require_auth
-from Utils.query_utils import livre_filtres,livre_pagination
+import exceptions
+import Utils.query_utils
+import messages
 
 
 def addLivre(app):
@@ -10,24 +11,28 @@ def addLivre(app):
     data=req.json_body
 
     if not data.get('title') :
-        raise DonneesInvalides("Le titre est obligatoire.")
+        raise exceptions.DonneesInvalides(messages.TITRE_OBLIGATOIRE)
     
     if not data.get('author') :
-        raise DonneesInvalides("L'auteur est obligatoire.")
+        raise exceptions.DonneesInvalides(messages.AUTEUR_OBLIGATOIRE)
+    
+    champs_livre = [c.name for c in Livre.__table__.columns if c.name != 'id']
+    livre_data = {champ: data.get(champ) for champ in champs_livre}
     
     session = SessionLocal()
-    newLivre= Livre(
-        title=data.get('title'),
-        author=data.get('author'),
-        year=data.get('year'),
-        isbn=data.get('isbn')
-    )
-    session.add(newLivre)
-    session.commit()
-    session.refresh(newLivre)
-    session.close()
 
-    return  {'message' : 'Livre ajouté avec succés !' , 'id':newLivre.id}
+    try:
+        newLivre= Livre(**livre_data)
+        session.add(newLivre)
+        session.commit()
+        session.refresh(newLivre)
+        return {'message': messages.LIVRE_AJOUTE}
+    
+    except Exception as e:
+        return exceptions.handleException(e)
+
+    finally:
+        session.close()
 
 
 
@@ -40,8 +45,8 @@ def getAllLivres(app):
     session=SessionLocal()
     query = session.query(Livre)
 
-    query=livre_filtres(query,params)
-    query=livre_pagination(query,params)
+    query=Utils.query_utils.livre_filtres(query,params)
+    query=Utils.query_utils.livre_pagination(query,params)
 
     livres=query.all()
     session.close()
@@ -59,18 +64,14 @@ def getLivreById(id):
         livre=session.query(Livre).filter(Livre.id==int(id)).first()
 
         if not livre :
-            raise LivreNonTrouve(id)
+            raise exceptions.LivreNonTrouve(id)
         
-        return {
-            'id':livre.id,
-            'title':livre.title,
-            'author':livre.author,
-            'year':livre.year,
-            'isbn':livre.isbn
-        }
+        champs_livre = {k: v for k, v in vars(livre).items() if not k.startswith('_')}
+        return champs_livre
+        
     
     except Exception as e:
-        return handleException(e)
+        return exceptions.handleException(e)
     
     finally:
         session.close()
@@ -86,7 +87,7 @@ def updateLivre(app,id):
     livre= session.query(Livre).filter(Livre.id == int(id)).first()
 
     if not livre:
-        raise LivreNonTrouve(livre.id)
+        raise exceptions.LivreNonTrouve(livre.id)
 
     
     livre.title=data.get('title',livre.title)
@@ -98,21 +99,23 @@ def updateLivre(app,id):
     session.refresh(livre)
     session.close()
 
-    return{'message': 'Livre mis a jours avec succés '}
+    return {'message': messages.LIVRE_MIS_A_JOUR}
 
 
 
-def deleteLivre(id):
+
+def deleteLivre(app,id):
+    require_auth(app.current_request)
     session= SessionLocal()
     livre= session.query(Livre).filter(Livre.id == int(id)).first()
     if not livre:
-        raise LivreNonTrouve(livre.id)
+        raise exceptions.LivreNonTrouve(id)
     
     session.delete(livre)
     session.commit()
     session.close()
 
-    return{'message': 'Livre supprimé avec succés !'}
+    return{'message': messages.LIVRE_SUPPRIME}
 
 
     

@@ -5,6 +5,11 @@ class LivreNonTrouve(Exception):
         self.message=f"Livre avec ID {livre_id} est introuvable"
         self.status_code=404
 
+class LivreExisteDeja(Exception):
+    def __init__(self, isbn):
+        self.message = f"Un livre avec l'ISBN {isbn} existe déjà."
+        self.status_code = 400
+
 class DonneesInvalides(Exception):
     def __init__(self, message):
         self.message = message
