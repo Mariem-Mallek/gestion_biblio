@@ -7,3 +7,5 @@ LIVRE_SUPPRIME = "Livre supprimé avec succès !"
 
 LIVRE_NON_TROUVE = "Livre avec l'ID {} est introuvable."
 LIVRE_EXISTE = "Livre existe dèja !"
+LIVRE_RETOURNER = "Livre(s) retourné(s) avec succès !"
+

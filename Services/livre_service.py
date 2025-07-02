@@ -51,10 +51,12 @@ def getAllLivres(app):
     livres=query.all()
     session.close()
     
-    return [{
-                'id': l.id,
-                'title': l.title,
-            } for l in livres]
+    livres_ids = [livre.id for livre in livres]
+
+    return {
+        'message': messages.LIVRE_RETOURNER,
+        'ID_livres': livres_ids
+    }
     
 
 
@@ -90,10 +92,9 @@ def updateLivre(app,id):
         raise exceptions.LivreNonTrouve(livre.id)
 
     
-    livre.title=data.get('title',livre.title)
-    livre.author=data.get('author',livre.author)
-    livre.year=data.get('year',livre.year)
-    livre.isbn=data.get('isbn',livre.isbn)
+    for column in Livre.__table__.columns:
+        if column.name != 'id' and column.name in data:
+            setattr(livre, column.name, data[column.name])
 
     session.commit()
     session.refresh(livre)
